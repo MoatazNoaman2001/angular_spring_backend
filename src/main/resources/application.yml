@@ -1,0 +1,34 @@
+﻿spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-mydatabase}
+    username: ${POSTGRES_USER:-postgres}
+    password: ${POSTGRES_PASSWORD:-mypassword}
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: moataz.noaman12@gmail.com
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  thymeleaf:
+    prefix: classpath:/templates/emails/
+    suffix: .html
+    mode: HTML
+    cache: false
+
+computer:
+  cpu: CORE_I7
+  ram: 16RAM
+  gpu: NVIDIA_RTX3050
