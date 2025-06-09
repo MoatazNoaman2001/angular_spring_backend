@@ -11,7 +11,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ExamRepository extends JpaRepository<Exam, UUID> {
+    @Query("SELECT EXISTS (SELECT 1 FROM Exam e WHERE e.examId = :examId AND e.createdBy.userId = :creatorId)")
+    Boolean isExamCreator(@Param("creatorId") UUID creatorId, @Param("examId") UUID examId);
+
     List<Exam> findByCreatedByUserId(UUID teacherId);
+
     @Query("SELECT e FROM Exam e WHERE e.subject IN " +
             "(SELECT us.subject FROM UserSubject us WHERE us.user.userId = :studentId)")
     List<Exam> findExamsByStudentId(@Param("studentId") UUID studentId);

@@ -5,13 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthResponse {
-    private String token;
-    private String email;
-    private String role;
-    private Boolean isFirstTime;
+public class StudentExams {
+    private List<ExamDto> pastExams;
+    private List<ExamDto> currentExams;
+    private List<ExamDto> upComingExams;
 }

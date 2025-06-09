@@ -36,17 +36,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         jwt = authHeader.substring(7);
+        var session = request.getSession(false);
+        System.out.println(request.toString());
+
         userEmail = jwtService.extractUsername(jwt);
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userRepository.findByEmail(userEmail).orElseThrow(() -> new UsernameNotFoundException("email not found"));
             if (jwtService.isTokenValid(jwt, userDetails)) {
+                if ((session == null || session.getAttribute("jwt") == null)) {
+                    throw new ServletException("Session not found or JWT not present in session");
+                }
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

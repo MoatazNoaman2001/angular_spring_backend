@@ -16,7 +16,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDto{
+public class RegisterRequest {
     private UUID userId;
     @NotBlank(message = "should type username")
     @Size(min = 4 , max = 50, message = "username should be between 4 to 50")

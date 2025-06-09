@@ -10,11 +10,16 @@
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  cache:
+    type: caffeine
+    cache-names: usedTokens
+    caffeine:
+      spec: maximumSize=1000, expireAfterWrite=24h
   mail:
     host: smtp.gmail.com
     port: 587
     username: moataz.noaman12@gmail.com
-    password:
+    password: wyxjzyli ketiewuv
     properties:
       mail:
         smtp:
@@ -28,6 +33,17 @@
     mode: HTML
     cache: false
 
+
+project:
+  location: location/
+base:
+  url: "localhost:8080/"
+springdoc:
+  default-produces-media-type: application/json
+  swagger-ui:
+    path: /swagger-ui.html
+    api-docs:
+      path: /api-docs
 computer:
   cpu: CORE_I7
   ram: 16RAM

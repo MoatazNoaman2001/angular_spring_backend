@@ -38,12 +38,16 @@ public class User implements UserDetails {
 
     private String phone;
 
+    private Boolean isFirstTime;
+    private Boolean isVerified;
+
+    private String image;
+
     @Embedded
     private Location address;
 
     @Enumerated(EnumType.STRING)
     private Role userType;
-
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -56,6 +60,10 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
     private List<Exam> createdExams = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<ExamAttempts> examAttempts = new ArrayList<>();
+
 
 
     @Override

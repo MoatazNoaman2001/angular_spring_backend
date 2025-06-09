@@ -29,6 +29,11 @@ public class ExamAttempts {
     @UpdateTimestamp
     private LocalDateTime EndDate;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+
     private Integer score;
 
     private Integer Total;

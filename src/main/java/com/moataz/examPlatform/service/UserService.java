@@ -2,26 +2,20 @@ package com.moataz.examPlatform.service;
 
 import com.moataz.examPlatform.dto.*;
 import com.moataz.examPlatform.model.User;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 
 public interface UserService {
+    List<UserStateDto> getAllUsersState();
 
-    AuthResponse register(UserDto userDto);
-    AuthResponse login(AuthRequest request);
+    User getUserProfile(String email);
 
-    String verify(User user);
-
-    String forgetPassword(ForgetRequest request);
-
-    List<UserDto> getAllUsers();
-
-    UserDto convertToDto(User user);
+//    String updateUserProfile(UserDto userDto, String email);
+ 
+    RegisterRequest convertToDto(User user);
 
     User loadUserByUsername(String email);
-
-    String isRightOwner(String token);
-
-    String resetPassword(ResetPasswordRequest request);
+    String updateMyImg(MultipartFile image, String phone);
 }

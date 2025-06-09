@@ -45,6 +45,16 @@ services:
       - postgres
     networks:
       - spring-network
+#    develop:
+#      watch:
+#        - action: rebuild
+#          path: ./src
+#          ignore:
+#            - ./src/test
+#          target: /app/src
+#        - action: rebuild
+#          path: ./pom.xml
+#          target: /app/pom.xml
 
 volumes:
   postgres-data:

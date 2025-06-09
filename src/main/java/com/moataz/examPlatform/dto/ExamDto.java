@@ -1,5 +1,6 @@
 package com.moataz.examPlatform.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,10 +16,13 @@ import java.util.UUID;
 @NoArgsConstructor
 public class ExamDto {
     private UUID ExamId;
+    @NotBlank(message = "must add exam title")
     private String title;
     private String description;
-    private Duration duration;
     private Integer marks;
+    @NotBlank(message = "add start date")
     private LocalDateTime startDate;
+    @NotBlank(message = "add end date")
     private LocalDateTime endDate;
+    private Duration duration = Duration.between(startDate, endDate);
 }
