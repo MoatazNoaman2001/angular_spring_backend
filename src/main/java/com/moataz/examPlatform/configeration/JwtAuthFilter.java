@@ -43,16 +43,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
         var session = request.getSession(false);
-        System.out.println(request.toString());
+        System.out.println(request.getParameterMap().entrySet().toString());
+        request.getHeaderNames().asIterator().forEachRemaining(s -> {
+            System.out.println(s + ": " +request.getHeader(s));
+        });
 
         userEmail = jwtService.extractUsername(jwt);
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userRepository.findByEmail(userEmail).orElseThrow(() -> new UsernameNotFoundException("email not found"));
             if (jwtService.isTokenValid(jwt, userDetails)) {
-                if ((session == null || session.getAttribute("jwt") == null)) {
-                    throw new ServletException("Session not found or JWT not present in session");
-                }
+//                if ((session == null || session.getAttribute("jwt") == null)) {
+//                    throw new ServletException("Session not found or JWT not present in session");
+//                }
+                System.out.println("Authorities: " + userDetails.getAuthorities());
+                System.out.println(userRepository.findByEmail(userEmail).orElseThrow(() -> new UsernameNotFoundException("email not found")).getUserType().name());
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

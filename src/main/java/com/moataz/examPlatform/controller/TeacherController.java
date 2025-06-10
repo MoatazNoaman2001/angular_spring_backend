@@ -1,8 +1,6 @@
 package com.moataz.examPlatform.controller;
 
-import com.moataz.examPlatform.dto.AddQuestionsRequest;
-import com.moataz.examPlatform.dto.ExamDto;
-import com.moataz.examPlatform.dto.QuestionDto;
+import com.moataz.examPlatform.dto.*;
 import com.moataz.examPlatform.model.User;
 import com.moataz.examPlatform.service.ExamsService;
 import jakarta.validation.Valid;
@@ -23,6 +21,17 @@ public class TeacherController {
     public ResponseEntity<String> createExam(@Valid @RequestBody ExamDto examDto, Authentication authentication){
         return ResponseEntity.ok(examsService.createExam(examDto, (User) authentication.getPrincipal()));
     }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UserStateDto>> getAllUsers() {
+        return ResponseEntity.ok(examsService.getAllUsersState());
+    }
+
+    @PutMapping("/edit-user/{userId}")
+    public ResponseEntity<String> editUser(@Valid @RequestBody EditStudentRequest editStudentRequest,@PathVariable("userId") String studentId, Authentication authentication) {
+        return ResponseEntity.ok(examsService.editUser(editStudentRequest,studentId, (User) authentication.getPrincipal()));
+    }
+
 
     @GetMapping("/exams")
     public ResponseEntity<List<ExamDto>> getAllTeacherExam(Authentication authentication){

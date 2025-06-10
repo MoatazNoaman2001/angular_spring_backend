@@ -2,7 +2,9 @@ package com.moataz.examPlatform.configeration;
 
 
 import com.moataz.examPlatform.model.Role;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -10,6 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -22,9 +25,11 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@Log
 public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
+    private final RoleLoggingFilter roleLoggingFilter;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -32,6 +37,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Collections.singletonList("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowedHeaders(Collections.singletonList("*"));
+        configuration.setAllowCredentials(false);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -45,14 +51,34 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**","/activate/**", "/swagger-ui/**", "/v3/api-docs*/**").permitAll()
-                        .requestMatchers("/api/teachers/**").hasRole(Role.Teacher.name())
-                        .requestMatchers("/api/users/**").hasRole(Role.Student.name())
-                        .anyRequest().authenticated()
+                .authorizeHttpRequests(auth -> {
+                    System.out.println(auth);
+                    auth
+                            .requestMatchers("/api/auth/**", "/activate/**", "/swagger-ui/**", "/v3/api-docs*/**").permitAll()
+                            .requestMatchers("/api/teachers/**").hasRole(Role.Teacher.name())
+                            .requestMatchers("/api/users/**").hasRole(Role.Student.name())
+                            .anyRequest().authenticated();
+                })
+                .exceptionHandling(ex -> ex
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            log.info(String.format(
+                                    "Access denied for request: {}, User: {}, Authorities: {}",
+                                    request.getRequestURI(),
+                                    SecurityContextHolder.getContext().getAuthentication() != null
+                                            ? SecurityContextHolder.getContext().getAuthentication().getName()
+                                            : "none",
+                                    SecurityContextHolder.getContext().getAuthentication() != null
+                                            ? SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+                                            : "none"
+                            ));
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Access denied: Insufficient permissions\"}");
+                        })
                 )
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(roleLoggingFilter, JwtAuthFilter.class);
 
         return http.build();
     }

@@ -5,7 +5,7 @@
     password: ${POSTGRES_PASSWORD:-mypassword}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -33,7 +33,10 @@
     mode: HTML
     cache: false
 
-
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
 project:
   location: location/
 base:

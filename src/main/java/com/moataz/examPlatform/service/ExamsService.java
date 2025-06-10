@@ -1,11 +1,6 @@
 package com.moataz.examPlatform.service;
 
-import com.moataz.examPlatform.dto.AddQuestionsRequest;
-import com.moataz.examPlatform.dto.ExamDto;
-import com.moataz.examPlatform.dto.QuestionDto;
-import com.moataz.examPlatform.dto.StudentExams;
-import com.moataz.examPlatform.model.Exam;
-import com.moataz.examPlatform.model.Question;
+import com.moataz.examPlatform.dto.*;
 import com.moataz.examPlatform.model.User;
 
 import java.util.List;
@@ -22,4 +17,7 @@ public interface ExamsService {
     List<ExamDto> getAllExamsToTeacher(User user);
     StudentExams getAllExamsToStudent(User user);
     List<QuestionDto> getAllExamQuestions(String id);
+    List<UserStateDto> getAllUsersState();
+
+    String editUser(EditStudentRequest editStudentRequest, String studentId, User teacher);
 }

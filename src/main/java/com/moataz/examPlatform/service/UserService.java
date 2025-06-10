@@ -8,8 +8,6 @@ import java.util.List;
 
 
 public interface UserService {
-    List<UserStateDto> getAllUsersState();
-
     User getUserProfile(String email);
 
 //    String updateUserProfile(UserDto userDto, String email);

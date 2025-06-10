@@ -114,7 +114,7 @@ public class AuthServiceImpl implements AuthService , UserDetailsService {
             if (user.getIsFirstTime()){
                 return "verified, now change password";
             }else{
-                if (!user.getIsVerified()) {
+                if (user.getIsVerified() == null || !user.getIsVerified()) {
                     user.setIsVerified(true);
                     repository.save(user);
 //                    markTokenAsUsed(token);

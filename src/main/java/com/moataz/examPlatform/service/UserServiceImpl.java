@@ -3,6 +3,7 @@ package com.moataz.examPlatform.service;
 import com.moataz.examPlatform.dto.*;
 import com.moataz.examPlatform.model.ExamAttempts;
 import com.moataz.examPlatform.model.User;
+import com.moataz.examPlatform.repository.ExamsAttemptRepository;
 import com.moataz.examPlatform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,50 +23,13 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
     private final UserRepository repository;
     private final FileServices fileServices;
-
+    private final ExamsAttemptRepository examsAttemptRepository;
 
     @Value("${project.location}")
     String path;
 
     @Value("${base.url}")
     String url;
-
-    @Override
-    public List<UserStateDto> getAllUsersState() {
-        List<UserStateDto> userStateDtos = new ArrayList<>();
-        List<User> users = repository.findAll();
-        for (User user : users) {
-            userStateDtos.add(
-                    UserStateDto.builder()
-                            .username(user.getUsername())
-                            .email(user.getEmail())
-                            .phone(user.getPhone())
-                            .activeExams(
-                                    user.getUserSubjects()
-                                            .stream()
-                                            .map(userSubject -> userSubject.getSubject().getExams().stream().filter(
-                                                            exam -> exam.getEndDate().isBefore(LocalDateTime.now())
-                                                    ).count()
-                                            ).reduce(Long::sum).get().intValue()
-                            )
-                            .attendedExams(user.getExamAttempts().size())
-                            .totalScore( user.getExamAttempts().stream()
-                                    .map(ExamAttempts::getScore)
-                                    .reduce(Integer::sum).get())
-                            .levelAndSemester(
-                                    user.getUserSubjects().stream()
-                                            .sorted(Comparator.comparing(o -> o.getSubject().getLevel() + o.getSubject().getSemester()))
-                                            .map(userSubject -> {
-                                                String level = String.valueOf(userSubject.getSubject().getLevel());
-                                                String semester = String.valueOf(userSubject.getSubject().getSemester());
-                                                return level + " - " + semester;
-                                            }).findFirst().get()
-                            )
-                            .build()
-            );
-        }
-        return userStateDtos;
-    }
 
     @Override
     public User getUserProfile(String email) {

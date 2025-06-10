@@ -28,10 +28,6 @@ public class UserController {
                 .body(userService.updateMyImg(image, user.getPhone()));
     }
 
-    @GetMapping("/")
-    public ResponseEntity<List<UserStateDto>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsersState());
-    }
 
     @GetMapping("/exams")
     public ResponseEntity<StudentExams> getAllStudentExams(Authentication authentication){

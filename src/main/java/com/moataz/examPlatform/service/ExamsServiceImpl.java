@@ -1,30 +1,30 @@
 package com.moataz.examPlatform.service;
 
-import com.moataz.examPlatform.dto.AddQuestionsRequest;
-import com.moataz.examPlatform.dto.ExamDto;
-import com.moataz.examPlatform.dto.QuestionDto;
-import com.moataz.examPlatform.dto.StudentExams;
+import com.moataz.examPlatform.dto.*;
 import com.moataz.examPlatform.exception.UserIsNotAllowed;
-import com.moataz.examPlatform.model.Exam;
-import com.moataz.examPlatform.model.Question;
-import com.moataz.examPlatform.model.User;
-import com.moataz.examPlatform.repository.ExamRepository;
+import com.moataz.examPlatform.model.*;
+import com.moataz.examPlatform.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ExamsServiceImpl implements ExamsService {
     private final ExamRepository examRepository;
+    private final UserRepository repository;
+    private final SubjectRepository subjectRepository;
+    private final SubjectStudentRepository subjectStudentRepository;
+    private final ExamsAttemptRepository examsAttemptRepository;
 
     @Override
     public String createExam(ExamDto examDto, User user) {
@@ -141,5 +141,67 @@ public class ExamsServiceImpl implements ExamsService {
                 .orElseThrow().getQuestions()
                 .stream().map(Question::toQuestionDto)
                 .toList();
+    }
+
+    @Override
+    public List<UserStateDto> getAllUsersState() {
+        List<UserStateDto> userStateDtos = new ArrayList<>();
+        List<User> users = repository.findByUserType(Role.Student);
+        for (User user : users) {
+            var exams = examsAttemptRepository.findById_UserId(user.getUserId());
+            userStateDtos.add(
+                    UserStateDto.builder()
+                            .username(user.getUsername())
+                            .email(user.getEmail())
+                            .phone(user.getPhone())
+                            .activeExams(
+                                    user.getUserSubjects()
+                                            .stream()
+                                            .map(userSubject -> userSubject.getSubject().getExams().stream().filter(
+                                                            exam -> exam.getEndDate().isBefore(LocalDateTime.now())
+                                                    ).count()
+                                            ).reduce(Long::sum).orElse(0L)
+                                            .intValue()
+                            )
+                            .attendedExams(exams.size())
+                            .totalScore(exams.stream()
+                                    .map(ExamAttempts::getScore)
+                                    .reduce(Integer::sum).orElse(0))
+                            .levelAndSemester(
+                                    user.getUserSubjects().stream()
+                                            .sorted(Comparator.comparing(o -> o.getSubject().getLevel() + o.getSubject().getSemester()))
+                                            .map(userSubject -> {
+                                                String level = String.valueOf(userSubject.getSubject().getLevel());
+                                                String semester = String.valueOf(userSubject.getSubject().getSemester());
+                                                return level + " - " + semester;
+                                            }).findFirst().orElse("N/A")
+                            )
+                            .build()
+            );
+        }
+        return userStateDtos;
+    }
+
+    @Override
+    public String editUser(EditStudentRequest editStudentRequest, String studentId, User teacher) {
+        User user = repository.findById(UUID.fromString(studentId)).orElseThrow(() -> new UsernameNotFoundException(""));
+        if (user.getUserType() != Role.Student) {
+            throw new UserIsNotAllowed();
+        }
+        user.setName(editStudentRequest.getName());
+        user.setPhone(editStudentRequest.getPhoneNumber());
+
+        for (String subject : editStudentRequest.getSubjects()) {
+            Subject subjectEntity = subjectRepository.findById(UUID.fromString(subject))
+                    .orElseThrow(() -> new ResourceNotFoundException("Subject not found: " + subject));
+            UserSubject userSubject = UserSubject.builder()
+                    .user(user)
+                    .subject(subjectEntity)
+                    .build();
+            user.getUserSubjects().add(userSubject);
+            repository.save(user);
+            subjectStudentRepository.save(userSubject);
+        }
+        return "user updated successfully";
     }
 }

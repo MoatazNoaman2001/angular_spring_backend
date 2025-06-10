@@ -2,10 +2,7 @@ package com.moataz.examPlatform.model;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -23,6 +20,7 @@ import java.util.*;
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(name = "users")
+@ToString(exclude = {"userSubjects", "createdExams"})
 public class User implements UserDetails {
 
     @Id
@@ -61,14 +59,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
     private List<Exam> createdExams = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<ExamAttempts> examAttempts = new ArrayList<>();
-
-
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(userType.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" +userType.name()));
     }
 
     @Override
