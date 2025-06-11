@@ -11,7 +11,7 @@ public interface ExamsService {
     String deleteExam(String examId, User user);
 
     String addQuestions(AddQuestionsRequest request);
-    String updateQuestions(List<QuestionDto> questionDto);
+    String updateQuestions(List<UpdateQuestionRequest> questionDto);
     String deleteQuestions(List<String> ids);
 
     List<ExamDto> getAllExamsToTeacher(User user);
@@ -20,4 +20,6 @@ public interface ExamsService {
     List<UserStateDto> getAllUsersState();
 
     String editUser(EditStudentRequest editStudentRequest, String studentId, User teacher);
+
+    String submitExamAnswers(String examId, List<StudentAnswers> answers, User user);
 }

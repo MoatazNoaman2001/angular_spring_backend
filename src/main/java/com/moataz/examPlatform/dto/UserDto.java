@@ -1,5 +1,6 @@
 package com.moataz.examPlatform.dto;
 
+import com.moataz.examPlatform.model.Location;
 import com.moataz.examPlatform.model.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -16,7 +17,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
+public class UserDto {
     private UUID userId;
     @NotBlank(message = "should type username")
     @Size(min = 4 , max = 50, message = "username should be between 4 to 50")
@@ -28,6 +29,12 @@ public class RegisterRequest {
     private String password;
     @NotBlank
     private Role role;
+
+    @NotBlank(message = "Phone number is required")
+    private String phone;
+    @NotBlank(message = "City is required")
+    private Location location;
+
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

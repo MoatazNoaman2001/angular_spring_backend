@@ -27,7 +27,7 @@ public class AuthServiceImpl implements AuthService , UserDetailsService {
     private final EmailService emailService;
 
     @Override
-    public AuthResponse register(RegisterRequest userDto, HttpSession session) {
+    public AuthResponse register(UserDto userDto, HttpSession session) {
         if (repository.findByEmail(userDto.getEmail()).isPresent()){
             throw new UserAlreadyExistsException();
         }
@@ -146,6 +146,7 @@ public class AuthServiceImpl implements AuthService , UserDetailsService {
         User user = repository.findByEmail(email).orElseThrow();
         if (user.isEnabled()) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setIsFirstTime(false);
             repository.save(user);
             return "password Changed go to login";
         }

@@ -35,7 +35,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Collections.singletonList("*"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH"));
         configuration.setAllowedHeaders(Collections.singletonList("*"));
         configuration.setAllowCredentials(false);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -54,7 +54,21 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     System.out.println(auth);
                     auth
-                            .requestMatchers("/api/auth/**", "/activate/**", "/swagger-ui/**", "/v3/api-docs*/**").permitAll()
+                            .requestMatchers(
+                                    "/api/auth/**",
+                                    "/activate/**",
+                                    "/v2/api-docs",
+                                    "/v3/api-docs",
+                                    "/v3/api-docs/**",
+                                    "/swagger-resources",
+                                    "/swagger-resources/**",
+                                    "/configuration/ui",
+                                    "/configuration/security",
+                                    "/swagger-ui.html",
+                                    "/admin/companies",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui/index.html"
+                                    ).permitAll()
                             .requestMatchers("/api/teachers/**").hasRole(Role.Teacher.name())
                             .requestMatchers("/api/users/**").hasRole(Role.Student.name())
                             .anyRequest().authenticated();

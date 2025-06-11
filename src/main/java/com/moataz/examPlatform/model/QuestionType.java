@@ -2,6 +2,6 @@ package com.moataz.examPlatform.model;
 
 public enum QuestionType {
     MULTIPLE_CHOICE,
-    ESSAY,
+    MSQ,
     TRUE_FALSE
 }

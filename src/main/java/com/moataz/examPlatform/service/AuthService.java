@@ -5,7 +5,7 @@ import com.moataz.examPlatform.model.User;
 import jakarta.servlet.http.HttpSession;
 
 public interface AuthService {
-    AuthResponse register(RegisterRequest userDto, HttpSession session);
+    AuthResponse register(UserDto userDto, HttpSession session);
     AuthResponse login(AuthRequest request, HttpSession session);
 
     String verify(User user);

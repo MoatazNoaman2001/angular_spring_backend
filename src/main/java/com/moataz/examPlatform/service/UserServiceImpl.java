@@ -1,7 +1,6 @@
 package com.moataz.examPlatform.service;
 
 import com.moataz.examPlatform.dto.*;
-import com.moataz.examPlatform.model.ExamAttempts;
 import com.moataz.examPlatform.model.User;
 import com.moataz.examPlatform.repository.ExamsAttemptRepository;
 import com.moataz.examPlatform.repository.UserRepository;
@@ -12,11 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -37,21 +32,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public RegisterRequest convertToDto(User user) {
-        return RegisterRequest.builder()
+    public UserDto convertToDto(User user) {
+        return UserDto.builder()
                 .userId(user.getUserId())
                 .name(user.getName())
                 .email(user.getEmail())
+                .phone(user.getPhone())
                 .role(user.getUserType())
+                .location(user.getAddress())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
+
     }
 
     @Override
     public User loadUserByUsername(String email) {
         return repository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("no user with this email"));
     }
+
 
     @Override
     public String updateMyImg(MultipartFile image, String email) {
@@ -69,5 +68,39 @@ public class UserServiceImpl implements UserService {
             }
         }
         throw new UsernameNotFoundException("cant find user with this email");
+    }
+
+    @Override
+    public String deleteUser(String userId) {
+        var user = repository.findById(UUID.fromString(userId));
+        if (user.isEmpty()){
+            user = repository.findByEmail(userId);
+            if (user.isEmpty()){
+                throw new UsernameNotFoundException("no user found");
+            }
+        }
+        repository.delete(user.get());
+        return "deleted";
+    }
+
+    @Override
+    public User updateProfile(User me, UpdateProfileRequest request) {
+        me.setName(request.getName());
+        me.setPhone(request.getPhoneNumber());
+        me.setEmail(request.getEmail());
+        repository.save(me);
+        return me;
+    }
+
+    @Override
+    public User updateProfileImage(User me, MultipartFile image) {
+        try {
+            String fileName = fileServices.uploadFile(path, image);
+            me.setImage(fileName);
+            repository.save(me);
+            return me;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload image", e);
+        }
     }
 }

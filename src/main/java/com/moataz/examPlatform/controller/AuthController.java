@@ -3,6 +3,7 @@ import com.moataz.examPlatform.dto.*;
 import com.moataz.examPlatform.model.User;
 import com.moataz.examPlatform.service.AuthService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,7 +16,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request, HttpSession session) {
+    public ResponseEntity<AuthResponse> register(@RequestBody UserDto request, HttpSession session) {
         return ResponseEntity.ok(authService.register(request, session));
     }
 
@@ -41,8 +42,8 @@ public class AuthController {
     }
 
 
-    @GetMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request){
+    @PatchMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request){
         return ResponseEntity.ok(authService.resetPassword(request));
     }
 

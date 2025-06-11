@@ -4,16 +4,15 @@ import com.moataz.examPlatform.dto.*;
 import com.moataz.examPlatform.model.User;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 
 public interface UserService {
     User getUserProfile(String email);
-
-//    String updateUserProfile(UserDto userDto, String email);
- 
-    RegisterRequest convertToDto(User user);
-
+    UserDto convertToDto(User user);
     User loadUserByUsername(String email);
     String updateMyImg(MultipartFile image, String phone);
+    String deleteUser(String userId);
+
+    User updateProfile(User me, UpdateProfileRequest request);
+
+    User updateProfileImage(User me, MultipartFile image);
 }

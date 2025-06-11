@@ -4,6 +4,7 @@ import com.moataz.examPlatform.dto.*;
 import com.moataz.examPlatform.exception.UserIsNotAllowed;
 import com.moataz.examPlatform.model.*;
 import com.moataz.examPlatform.repository.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -23,16 +25,18 @@ public class ExamsServiceImpl implements ExamsService {
     private final ExamRepository examRepository;
     private final UserRepository repository;
     private final SubjectRepository subjectRepository;
+    private final QuestionRepository questionRepository;
+    private final QuestionAnswersRepository questionAnswersRepository;
     private final SubjectStudentRepository subjectStudentRepository;
     private final ExamsAttemptRepository examsAttemptRepository;
 
     @Override
+    @Transactional
     public String createExam(ExamDto examDto, User user) {
         if (user.isEnabled()) {
             Exam exam = Exam.builder()
-                    .examId(UUID.randomUUID())
                     .title(examDto.getTitle())
-                    .description(examDto.getDescription())
+                    .examType(ExamType.valueOf(examDto.getExamType()))
                     .marks(examDto.getMarks())
                     .startDate(examDto.getStartDate())
                     .endDate(examDto.getEndDate())
@@ -48,14 +52,14 @@ public class ExamsServiceImpl implements ExamsService {
     @Override
     public ExamDto updateExam(ExamDto examDto, User user) {
         boolean isExist = examRepository.findById(examDto.getExamId()).isPresent();
-        if (isExist){
-            boolean isCreator= examRepository.isExamCreator(examDto.getExamId(), user.getUserId());
-            if (isCreator){
+        if (isExist) {
+            boolean isCreator = examRepository.isExamCreator(examDto.getExamId(), user.getUserId());
+            if (isCreator) {
                 var exam = examRepository.findById(examDto.getExamId());
                 if (exam.isPresent()) {
                     Exam updatedExam = exam.get();
                     updatedExam.setTitle(examDto.getTitle());
-                    updatedExam.setDescription(examDto.getDescription());
+                    updatedExam.setExamType(ExamType.valueOf(examDto.getExamType()));
                     updatedExam.setMarks(examDto.getMarks());
                     updatedExam.setStartDate(examDto.getStartDate());
                     updatedExam.setEndDate(examDto.getEndDate());
@@ -73,9 +77,9 @@ public class ExamsServiceImpl implements ExamsService {
     @Override
     public String deleteExam(String examId, User user) {
         boolean isExist = examRepository.findById(UUID.fromString(examId)).isPresent();
-        if (isExist){
-            boolean isCreator= examRepository.isExamCreator(UUID.fromString(examId), user.getUserId());
-            if (isCreator){
+        if (isExist) {
+            boolean isCreator = examRepository.isExamCreator(UUID.fromString(examId), user.getUserId());
+            if (isCreator) {
                 examRepository.deleteById(UUID.fromString(examId));
                 return "deleted successfully";
             }
@@ -85,12 +89,79 @@ public class ExamsServiceImpl implements ExamsService {
     }
 
     @Override
+    @Transactional
     public String addQuestions(AddQuestionsRequest request) {
-        return null;
+        questionRepository.saveAll(request.getQuestions().stream().map(
+                questionDto -> Question.builder()
+                        .questionId(UUID.randomUUID())
+                        .text(questionDto.getText())
+                        .marks(questionDto.getMarks())
+                        .build()
+        ).toList());
+
+        questionAnswersRepository.saveAll(
+                request.getQuestions().stream().flatMap(
+                        questionDto -> Stream.concat(questionDto.getRightAnswer().stream()
+                                .map(
+                                        answerDto -> QuestionAnswers.builder()
+                                                .question(Question.builder()
+                                                        .questionId(questionDto.getQuestionId())
+                                                        .build()
+                                                )
+                                                .text(answerDto)
+                                                .isCorrect(true)
+                                                .build()
+                                ),  questionDto.getWrongAnswer().stream()
+                                .map(
+                                        answerDto -> QuestionAnswers.builder()
+                                                .question(Question.builder()
+                                                        .questionId(questionDto.getQuestionId())
+                                                        .build()
+                                                )
+                                                .text(answerDto)
+                                                .isCorrect(false)
+                                                .build()
+                                ) )
+                ).toList()
+        );
+        return "Saved";
     }
 
     @Override
-    public String updateQuestions(List<QuestionDto> questionDto) {
+    public String updateQuestions(List<UpdateQuestionRequest> questionDto) {
+        for (UpdateQuestionRequest dto : questionDto) {
+            Question question = questionRepository.findById(dto.getQuestionId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Question not found: " + dto.getQuestionId()));
+            question.setText(dto.getText());
+            question.setMarks(dto.getMarks());
+            questionRepository.save(question);
+            questionAnswersRepository.saveAll(
+                    Stream.concat(dto.getRightAnswer().stream()
+                                    .map(
+                                            answerDto -> QuestionAnswers.builder()
+                                                    .answerId(UUID.fromString(answerDto.getId()))
+                                                    .question(Question.builder()
+                                                            .questionId(dto.getQuestionId())
+                                                            .build()
+                                                    )
+                                                    .text(answerDto.getAnswer())
+                                                    .isCorrect(true)
+                                                    .build()
+                                    ),  dto.getWrongAnswer().stream()
+                                    .map(
+                                            answerDto -> QuestionAnswers.builder()
+                                                    .question(Question.builder()
+                                                            .questionId(dto.getQuestionId())
+                                                            .build()
+                                                    )
+                                                    .answerId(UUID.fromString(answerDto.getId()))
+                                                    .text(answerDto.getAnswer())
+                                                    .isCorrect(false)
+                                                    .build()
+                                    ) ).toList()
+            );
+
+        }
         return null;
     }
 
@@ -151,7 +222,7 @@ public class ExamsServiceImpl implements ExamsService {
             var exams = examsAttemptRepository.findById_UserId(user.getUserId());
             userStateDtos.add(
                     UserStateDto.builder()
-                            .username(user.getUsername())
+                            .username(user.getName())
                             .email(user.getEmail())
                             .phone(user.getPhone())
                             .activeExams(
@@ -203,5 +274,10 @@ public class ExamsServiceImpl implements ExamsService {
             subjectStudentRepository.save(userSubject);
         }
         return "user updated successfully";
+    }
+
+    @Override
+    public String submitExamAnswers(String examId, List<StudentAnswers> answers, User user) {
+        return null;
     }
 }

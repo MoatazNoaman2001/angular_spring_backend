@@ -30,7 +30,7 @@ public class Exam {
     private Subject subject;
 
     private String title;
-    private String description;
+    private ExamType examType;
 
     private Duration duration;
     private Integer marks;
@@ -50,8 +50,7 @@ public class Exam {
         return ExamDto.builder()
                 .ExamId(exam.examId)
                 .title(exam.title)
-                .description(exam.description)
-                .duration(exam.duration)
+                .examType(exam.examType.name())
                 .marks(exam.marks)
                 .startDate(exam.startDate)
                 .endDate(exam.endDate)
