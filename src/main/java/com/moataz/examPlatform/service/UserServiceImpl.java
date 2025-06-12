@@ -1,7 +1,10 @@
 package com.moataz.examPlatform.service;
 
 import com.moataz.examPlatform.dto.*;
+import com.moataz.examPlatform.model.Exam;
+import com.moataz.examPlatform.model.Subject;
 import com.moataz.examPlatform.model.User;
+import com.moataz.examPlatform.repository.ExamRepository;
 import com.moataz.examPlatform.repository.ExamsAttemptRepository;
 import com.moataz.examPlatform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,13 +14,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository repository;
     private final FileServices fileServices;
+    private final ExamRepository examRepository;
     private final ExamsAttemptRepository examsAttemptRepository;
 
     @Value("${project.location}")
@@ -32,6 +39,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserDto getMyProfile(User me) {
+        List<Exam> createdExams = examRepository.findByCreatedByUserId(me.getUserId());
+        Set<Subject> subjects = createdExams.stream().map(Exam::getSubject).collect(Collectors.toSet());
+        UserDto userDto = convertToDto(me);
+        userDto.setIsVerified(me.getIsVerified());
+        userDto.setCreatedExams(createdExams);
+        userDto.setMySubjects(subjects);
+        return userDto;
+    }
+
+    @Override
     public UserDto convertToDto(User user) {
         return UserDto.builder()
                 .userId(user.getUserId())
@@ -39,6 +57,7 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(user.getUserType())
+                .image(user.getImage())
                 .location(user.getAddress())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
@@ -84,12 +103,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateProfile(User me, UpdateProfileRequest request) {
-        me.setName(request.getName());
-        me.setPhone(request.getPhoneNumber());
-        me.setEmail(request.getEmail());
+    public UpdateProfileResponse updateProfile(User me, UpdateProfileRequest request) {
+        if (request.getName() != null) {
+            me.setName(request.getName());
+        }
+        if (request.getPhoneNumber() != null) {
+            me.setPhone(request.getPhoneNumber());
+        }
+        if (request.getEmail() != null) {
+            me.setEmail(request.getEmail());
+        }
+        if (request.getAddress() != null) {
+            me.setAddress(request.getAddress());
+        }
         repository.save(me);
-        return me;
+        String jwt = new JwtService().generateToken(me);
+        UpdateProfileResponse response = UpdateProfileResponse.builder().token(jwt).user(convertToDto(me)).build();
+        return response;
     }
 
     @Override

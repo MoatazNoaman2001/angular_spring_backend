@@ -15,6 +15,10 @@
     cache-names: usedTokens
     caffeine:
       spec: maximumSize=1000, expireAfterWrite=24h
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   mail:
     host: smtp.gmail.com
     port: 587

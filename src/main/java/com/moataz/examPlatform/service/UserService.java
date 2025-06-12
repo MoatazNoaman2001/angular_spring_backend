@@ -7,12 +7,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
     User getUserProfile(String email);
+    UserDto getMyProfile(User me);
     UserDto convertToDto(User user);
     User loadUserByUsername(String email);
     String updateMyImg(MultipartFile image, String phone);
     String deleteUser(String userId);
 
-    User updateProfile(User me, UpdateProfileRequest request);
+    UpdateProfileResponse updateProfile(User me, UpdateProfileRequest request);
 
     User updateProfileImage(User me, MultipartFile image);
 }

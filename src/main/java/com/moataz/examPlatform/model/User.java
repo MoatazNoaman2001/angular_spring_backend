@@ -1,6 +1,7 @@
 package com.moataz.examPlatform.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -54,6 +55,7 @@ public class User implements UserDetails {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<UserSubject> userSubjects = new HashSet<>();
 
     @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)

@@ -13,11 +13,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UpdateProfileRequest {
+public class UpdateTeacherProfileRequest {
     @NotBlank(message = "should type name")
     private String name;
     @Size(min = 8, message = "phone number should be at least 8 characters")
-    private String phoneNumber;
+    private String phone;
     @Email
     private String email;
 

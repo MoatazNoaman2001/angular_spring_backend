@@ -10,14 +10,17 @@ public interface ExamsService {
     ExamDto updateExam(ExamDto examDto, User user);
     String deleteExam(String examId, User user);
 
+    List<QuestionDto> getAllQuestionForExam(String id);
     String addQuestions(AddQuestionsRequest request);
-    String updateQuestions(List<UpdateQuestionRequest> questionDto);
+    QuestionDto updateQuestions(List<UpdateQuestionRequest> questionDto);
     String deleteQuestions(List<String> ids);
 
     List<ExamDto> getAllExamsToTeacher(User user);
     StudentExams getAllExamsToStudent(User user);
     List<QuestionDto> getAllExamQuestions(String id);
+    ExamDto getExamDto(String id);
     List<UserStateDto> getAllUsersState();
+    UserStateDetailedDto getUserStateByEmail(String email);
 
     String editUser(EditStudentRequest editStudentRequest, String studentId, User teacher);
 

@@ -36,23 +36,23 @@ public class UserController {
         return ResponseEntity.ok(userService.convertToDto(user));
     }
     @PatchMapping("/profile")
-    public ResponseEntity<User> updateProfile(
+    public ResponseEntity<UpdateProfileResponse> updateProfile(
             Authentication authentication,
             @Valid @RequestBody UpdateProfileRequest request
     ) {
         User me = ((User) authentication.getPrincipal());
-        User updatedUser = userService.updateProfile(me, request);
+        UpdateProfileResponse updatedUser = userService.updateProfile(me, request);
         return ResponseEntity.ok(updatedUser);
     }
 
     @PutMapping("/profile/image")
-    public ResponseEntity<User> updateProfileImage(
+    public ResponseEntity<UserDto> updateProfileImage(
             Authentication authentication,
-            @RequestParam("image") MultipartFile image
-    ) throws IOException {
+            @RequestPart("image") MultipartFile image
+    ) {
         User me = ((User) authentication.getPrincipal());
         User updatedUser = userService.updateProfileImage(me, image);
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(userService.convertToDto(updatedUser));
     }
 
     @GetMapping("/exams")
@@ -61,6 +61,12 @@ public class UserController {
         return ResponseEntity.ok(examsService.getAllExamsToStudent(user));
     }
 
+    @GetMapping("/exams/{examId}")
+    public ResponseEntity<ExamDto> getExamById(@RequestParam("examId") String examId , Authentication authentication){
+        var user = ((User)authentication.getPrincipal());
+        ExamDto examDto = examsService.getExamDto(examId);
+        return ResponseEntity.ok(examDto);
+    }
     @PostMapping("/answers/{examId}")
     public ResponseEntity<String> submitExamAnswers(@PathVariable String examId, @RequestBody List<StudentAnswers> answers, Authentication authentication) {
         var user = ((User) authentication.getPrincipal());

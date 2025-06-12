@@ -1,6 +1,7 @@
 package com.moataz.examPlatform.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class AddQuestionsRequest {
 
-    @NotBlank(message = "must send question")
+    @NotNull
     List<QuestionDto> questions;
     @NotBlank(
         message = "must send exam id"

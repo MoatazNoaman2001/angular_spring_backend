@@ -1,8 +1,6 @@
 package com.moataz.examPlatform.service;
 
-import com.moataz.examPlatform.dto.ExamDto;
-import com.moataz.examPlatform.dto.StudentExams;
-import com.moataz.examPlatform.dto.TeacherDashboardDto;
+import com.moataz.examPlatform.dto.*;
 import com.moataz.examPlatform.model.Exam;
 import com.moataz.examPlatform.model.ExamAttempts;
 import com.moataz.examPlatform.model.User;
@@ -61,5 +59,57 @@ public class TeacherServiceImpl implements TeacherService {
         }
 
         return null;
+    }
+
+    @Override
+    public UpdateProfileResponse updateProfile(User me, UpdateTeacherProfileRequest request) {
+        if (request.getName() != null) {
+            me.setName(request.getName());
+        }
+        if (request.getPhone() != null) {
+            me.setPhone(request.getPhone());
+        }
+        if (request.getEmail() != null) {
+            me.setEmail(request.getEmail());
+        }
+        if (request.getAddress() != null) {
+            me.setAddress(request.getAddress());
+        }
+        userRepository.save(me);
+        String jwt = new JwtService().generateToken(me);
+        UpdateProfileResponse response = UpdateProfileResponse.builder().token(jwt).user(convertToDto(me)).build();
+        return response;
+    }
+
+    public UserDto convertToDto(User user) {
+        return UserDto.builder()
+                .userId(user.getUserId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getUserType())
+                .image(user.getImage())
+                .location(user.getAddress())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
+
+    }
+
+    @Override
+    public UserDto addStudent(AddStudentRequest userDto) {
+        User user = User.builder()
+                .name(userDto.getName())
+                .email(userDto.getEmail())
+                .phone(userDto.getPhone())
+                .userType(userDto.getRole())
+                .image(userDto.getImage())
+                .isFirstTime(true)
+                .isVerified(false)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        userRepository.save(user);
+        return convertToDto(user);
     }
 }

@@ -1,5 +1,6 @@
 package com.moataz.examPlatform.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.moataz.examPlatform.dto.ExamDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -40,6 +41,7 @@ public class Exam {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User createdBy;
 
     @OneToMany(mappedBy = "exam", fetch = FetchType.LAZY)
