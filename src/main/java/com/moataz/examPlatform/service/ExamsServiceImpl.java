@@ -6,11 +6,13 @@ import com.moataz.examPlatform.model.*;
 import com.moataz.examPlatform.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,7 +43,9 @@ public class ExamsServiceImpl implements ExamsService {
                     .marks(examDto.getMarks())
                     .startDate(examDto.getStartDate())
                     .endDate(examDto.getEndDate())
-                    .duration(examDto.getDuration())
+                    .duration(
+                            Duration.parse(examDto.getDuration())
+                    )
                     .createdBy(user)
                     .build();
             examRepository.save(exam);
@@ -64,7 +68,9 @@ public class ExamsServiceImpl implements ExamsService {
                     updatedExam.setMarks(examDto.getMarks());
                     updatedExam.setStartDate(examDto.getStartDate());
                     updatedExam.setEndDate(examDto.getEndDate());
-                    updatedExam.setDuration(examDto.getDuration());
+                    updatedExam.setDuration(
+                            Duration.parse(examDto.getDuration())
+                    );
                     examRepository.save(updatedExam);
                     return Exam.toExamDto(updatedExam);
                 }
@@ -79,7 +85,7 @@ public class ExamsServiceImpl implements ExamsService {
     public String deleteExam(String examId, User user) {
         boolean isExist = examRepository.findById(UUID.fromString(examId)).isPresent();
         if (isExist) {
-            boolean isCreator = examRepository.isExamCreator( user.getUserId() , UUID.fromString(examId));
+            boolean isCreator = examRepository.isExamCreator(user.getUserId(), UUID.fromString(examId));
             if (isCreator) {
                 examRepository.deleteById(UUID.fromString(examId));
                 return "deleted successfully";
@@ -167,7 +173,7 @@ public class ExamsServiceImpl implements ExamsService {
             questionDto.getRightAnswer().forEach(answerText ->
                     answers.add(QuestionAnswers.builder()
                             .question(question) // Use the saved question reference
-                            .text(answerText)
+                            .text(answerText.getAnswer())
                             .isCorrect(true)
                             .build())
             );
@@ -176,7 +182,7 @@ public class ExamsServiceImpl implements ExamsService {
             questionDto.getWrongAnswer().forEach(answerText ->
                     answers.add(QuestionAnswers.builder()
                             .question(question) // Use the saved question reference
-                            .text(answerText)
+                            .text(answerText.getAnswer())
                             .isCorrect(false)
                             .build())
             );
@@ -249,8 +255,31 @@ public class ExamsServiceImpl implements ExamsService {
     @Override
     public StudentExams getAllExamsToStudent(User user) {
         List<Exam> studentExams = examRepository.findAll();
+        List<ExamAttempts> examAttempts = examsAttemptRepository.findById_UserId(user.getUserId());
 
-        List<ExamDto> pastExams = new ArrayList<>();
+
+        List<ExamAttemptDto> pastExams = new ArrayList<>(examAttempts.stream().map(
+                examAttempts1 -> {
+                    Exam exam = examRepository.findById(examAttempts1.getId().getExamId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Exam not found with id: " + examAttempts1.getId().getExamId()));
+                    return ExamAttemptDto.builder()
+                            .examId(examAttempts1.getId().getExamId())
+                            .studentId(examAttempts1.getId().getUserId())
+                            .examTitle(exam.getTitle())
+                            .examType(exam.getExamType().name())
+                            .score(examAttempts1.getScore())
+                            .status(
+                                    (double) examAttempts1.getScore() / exam.getMarks() >= 0.5 ? "passed" : "failed"
+                            )
+                            .startTime(examAttempts1.getCreatedAt().toString())
+                            .endTime(examAttempts1.getEndDate().toString())
+                            .marks(exam.getMarks())
+                            .duration(
+                                    DurationFormatUtils.formatDuration(Duration.between(examAttempts1.getCreatedAt(), examAttempts1.getEndDate()).toMillis(), "H:mm:ss", true)
+                            )
+                            .build();
+                }
+        ).toList());
         List<ExamDto> currentExams = new ArrayList<>();
         List<ExamDto> upComingExams = new ArrayList<>();
 
@@ -258,11 +287,26 @@ public class ExamsServiceImpl implements ExamsService {
         LocalDateTime startOfToday = today.atStartOfDay();
         LocalDateTime endOfToday = today.atTime(23, 59, 59, 999999999);
 
+
         for (Exam exam : studentExams) {
             ExamDto examDto = Exam.toExamDto(exam);
-            if (exam.getEndDate().isBefore(startOfToday)) {
-                pastExams.add(examDto);
-            } else if (!exam.getStartDate().isAfter(endOfToday) && !exam.getEndDate().isBefore(startOfToday)) {
+            if (exam.getEndDate().isBefore(startOfToday)){
+                pastExams.add(ExamAttemptDto.builder()
+                        .examId(exam.getExamId())
+                        .studentId(null)
+                        .examTitle(exam.getTitle())
+                        .examType(exam.getExamType().name())
+                        .score(0)
+                                .status("failed")
+                        .startTime(null)
+                        .endTime(null)
+                        .marks(exam.getMarks())
+                        .duration(
+                                "00:00:00"
+                        )
+                        .build());
+            }
+            if (!exam.getStartDate().isAfter(endOfToday) && !exam.getEndDate().isBefore(startOfToday)) {
                 currentExams.add(examDto);
             } else if (exam.getStartDate().isAfter(endOfToday)) {
                 upComingExams.add(examDto);
@@ -285,6 +329,18 @@ public class ExamsServiceImpl implements ExamsService {
 
     @Override
     public ExamDto getExamDto(String id) {
+        Exam exam = examRepository.findById(UUID.fromString(id)).orElseThrow(
+                () -> new ResourceNotFoundException("Exam not found with id: " + id)
+        );
+        ExamDto examDto = Exam.toExamDto(exam);
+        examDto.setQuestionDto(questionRepository.findAllByExam_ExamId(UUID.fromString(id))
+                .stream().map(Question::toQuestionDto)
+                .toList());
+        return examDto;
+    }
+
+    @Override
+    public ExamDto getExamWithQuestions(String id) {
         Exam exam = examRepository.findById(UUID.fromString(id)).orElseThrow(
                 () -> new ResourceNotFoundException("Exam not found with id: " + id)
         );
@@ -361,7 +417,7 @@ public class ExamsServiceImpl implements ExamsService {
     public UserStateDetailedDto getUserStateByEmail(String email) {
         User user = repository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("no user with email"));
         List<ExamAttempts> attempts = examsAttemptRepository.findById_UserId(user.getUserId());
-        List<Exam> originalExams = attempts.stream().map(et-> examRepository.findById(et.getId().getExamId())
+        List<Exam> originalExams = attempts.stream().map(et -> examRepository.findById(et.getId().getExamId())
                 .orElseThrow(() -> new ResourceNotFoundException("cant find exam with id" + et.getId().getExamId()))).collect(Collectors.toList());
         UserStateDetailedDto userStateDetailedDto = UserStateDetailedDto.builder()
                 .name(user.getUsername())

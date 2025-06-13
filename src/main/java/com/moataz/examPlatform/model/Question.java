@@ -1,5 +1,6 @@
 package com.moataz.examPlatform.model;
 
+import com.moataz.examPlatform.dto.AnswersDto;
 import com.moataz.examPlatform.dto.QuestionDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -56,6 +57,19 @@ public class Question {
                 .marks(question.marks)
                 .text(question.text)
                 .type(question.type)
+                .wrongAnswer(question.getAnswers()
+                        .stream().filter(questionAnswers -> !questionAnswers.getIsCorrect())
+                        .map(questionAnswers -> AnswersDto.builder().answer(questionAnswers.getText())
+                                .id(questionAnswers.getAnswerId().toString()).build())
+                        .toList()
+                )
+                .rightAnswer(question.getAnswers()
+                        .stream().filter(QuestionAnswers::getIsCorrect)
+                        .map(questionAnswers -> AnswersDto.builder().answer(questionAnswers.getText())
+                                .id(questionAnswers.getAnswerId().toString()).build())
+                        .toList()
+                )
+                .isRight(question.getType() == QuestionType.TRUE_FALSE)
                 .updatedAt(question.updatedAt)
                 .build();
     }

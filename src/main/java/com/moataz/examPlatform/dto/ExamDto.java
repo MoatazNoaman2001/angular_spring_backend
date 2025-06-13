@@ -29,7 +29,8 @@ public class ExamDto {
     private LocalDateTime startDate;
     @NotNull
     private LocalDateTime endDate;
-    public Duration getDuration() {
-        return Duration.between(startDate, endDate);
-    }
+    private String duration;
+//    public Duration getDuration() {
+//        return Duration.between(startDate, endDate);
+//    }
 }

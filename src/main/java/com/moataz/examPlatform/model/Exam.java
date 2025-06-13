@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Duration;
@@ -48,7 +49,7 @@ public class Exam {
     private Set<Question> questions = new HashSet<>();
 
 
-    public static ExamDto toExamDto(Exam exam){
+    public static ExamDto  toExamDto(Exam exam){
         return ExamDto.builder()
                 .ExamId(exam.examId)
                 .title(exam.title)
@@ -56,6 +57,10 @@ public class Exam {
                 .marks(exam.marks)
                 .startDate(exam.startDate)
                 .endDate(exam.endDate)
+//                .questionDto(exam.questions)
+                .duration(
+                        DurationFormatUtils.formatDuration(exam.duration.toMillis(), "H:mm:ss", true)
+                )
                 .build();
 
     }

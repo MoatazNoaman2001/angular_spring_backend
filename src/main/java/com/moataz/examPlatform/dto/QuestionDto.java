@@ -26,8 +26,8 @@ public class QuestionDto {
     private String text;
     private Integer marks;
     private Boolean isRight;
-    private List<String> wrongAnswer;
-    private List<String> rightAnswer;
+    private List<AnswersDto> wrongAnswer;
+    private List<AnswersDto> rightAnswer;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -19,6 +19,7 @@ public interface ExamsService {
     StudentExams getAllExamsToStudent(User user);
     List<QuestionDto> getAllExamQuestions(String id);
     ExamDto getExamDto(String id);
+    ExamDto getExamWithQuestions(String id);
     List<UserStateDto> getAllUsersState();
     UserStateDetailedDto getUserStateByEmail(String email);
 

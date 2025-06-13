@@ -62,7 +62,7 @@ public class UserController {
     }
 
     @GetMapping("/exams/{examId}")
-    public ResponseEntity<ExamDto> getExamById(@RequestParam("examId") String examId , Authentication authentication){
+    public ResponseEntity<ExamDto> getExamById(@PathVariable("examId") String examId , Authentication authentication){
         var user = ((User)authentication.getPrincipal());
         ExamDto examDto = examsService.getExamDto(examId);
         return ResponseEntity.ok(examDto);

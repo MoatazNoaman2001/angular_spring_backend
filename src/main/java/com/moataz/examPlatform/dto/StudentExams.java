@@ -1,5 +1,6 @@
 package com.moataz.examPlatform.dto;
 
+import com.moataz.examPlatform.model.ExamAttempts;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StudentExams {
-    private List<ExamDto> pastExams;
+    private List<ExamAttemptDto> pastExams;
     private List<ExamDto> currentExams;
     private List<ExamDto> upComingExams;
 }
